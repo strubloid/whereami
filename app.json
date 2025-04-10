@@ -1,5 +1,6 @@
 {
   "expo": {
+    "scheme": "whereami", 
     "name": "whereami",
     "slug": "whereami",
     "version": "1.0.0",
@@ -23,7 +24,11 @@
       "package": "com.anonymous.whereami"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
