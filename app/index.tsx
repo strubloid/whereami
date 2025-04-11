@@ -1,55 +1,148 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View, Image, ScrollView, useWindowDimensions, ImageBackground } from 'react-native'
 import React, { useEffect, useState } from 'react';
-
+import { Maps } from '../components/Maps/Maps';
+import { Picker } from '@react-native-picker/picker';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Weather, NullableWeather, FetchWeatherProps } from '../components/IWeather';
+import { WeatherBackgroundImages } from '../components/WeatherBackgroundImages';
 
 const Home = () => {
-  
+
+  // Starting the map controller
+  let mapController = new Maps();
+  let allLocations = mapController.getAll();
+  let [currentLocation, setCurrentLocation] = useState(mapController.getDefaultLocation());
+
+  const { width } = useWindowDimensions();
   const [weather, setWeather] = useState<NullableWeather>(null);
   const [loading, setLoading] = useState(true);
 
-  // Berlin data, to test
-  // const latitude = 52.52;   
-  // const longitude = 13.41;
-
-  // Cork
-  const latitude = 51.89;   
-  const longitude =  8.47;
-  
-
+  // Loading the styles of this page
   const styles = StyleSheet.create({
+    scrollView: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      alignContent: 'center',
+    },
+    background: {
+      height: '100%',
+    },
+    imageTitle: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: '100%',
+      height: '100%',
+      zIndex: -1,
+    },
+    section: {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: '80%',
+      marginBottom: 10,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: 'transparent',
+      borderRadius: 5,
+      backgroundColor: '#f9f9f9A4',
+    },
+    sectionHeader: {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: width > 600 ? '20%' : '40%',
+      marginBottom: 10,
+      marginTop: 20,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: 'transparent',
+      borderRadius: 100,
+      backgroundColor: '#f9f9f9A4',
+    },
     container: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: 20
+      padding: 20,
     },
+
     title: {
-      fontSize: 20,
-      marginBottom: 10
+      fontSize: 28,
+      marginBottom: 10,
+      textAlign: 'center',
+    },
+    list: {
+      paddingHorizontal: 10,
+    },
+    listItem: {
+      alignItems: 'flex-start',
+      margin: 2,
+    },
+
+    pickerWrapper: {
+      borderWidth: 1,
+      borderColor: '#ccc',
+      borderRadius: 8,
+      overflow: 'hidden',
+      backgroundColor: '#f9f9f9',
+    },
+    picker: {
+      height: 50,
+      width: '100%',
+      paddingHorizontal: 10,
+      color: '#333',
+    },
+    pickeritem: {
+      height: 50,
+      width: '100%',
     }
   });
 
-  interface Weather {
-    temperature: number;
-    windspeed: number;
-    time: string;
-  }
+  // Messages for the weather
+  const weatherMessages = {
+    "weather-sunny": `It’s full sun mode in ${currentLocation.name}! The sky is showing off, the sun is blazing like it’s on a mission, and every surface is a frying pan. SPF 50+ is your best friend today, unless you’re trying to roast. It’s the perfect time to fake productivity with a cold drink in hand, while secretly melting into the pavement. Welcome to human-toast mode.`,
+    "weather-cloudy": `${currentLocation.name} is draped in a thick, stylish coat of clouds. Not bright, not rainy, just perfectly “meh.” The sun called in sick, the clouds showed up to work, and the mood outside screams introspection. It's the kind of day where you stare out the window and ponder life choices while sipping something warm and pretending you’re in a sad indie film.`,
+    "weather-fog": `Fog has swallowed ${currentLocation.name} like a fantasy realm about to reveal a dragon. You can’t see three steps ahead, the air feels like mystery soup, and everything looks ten times spookier than usual. It’s giving thriller movie opening scene vibes. Probably not the best day for a long drive or a confident jog, unless you're training to be a ghostbuster.`,
+    "weather-partly-rainy": `${currentLocation.name} is in that awkward mood between bright and soggy. The sky is indecisive—sun’s peeking through like it didn’t mean to intrude, while the drizzle is vibing in the background. It’s the kind of day where your weather app says “maybe” and your outfit screams “regret.” Take the umbrella, don’t trust the clouds—they're flaky.`,
+    "weather-snowy-rainy": `It’s absolute chaos above ${currentLocation.name}. Rain and snow are in a wild tag-team match, and you’re the unlucky referee. It’s wet, cold, confusing, and somehow beautiful in a messy kind of way. This is the type of weather that laughs at your shoes, ignores your coat, and dares you to step outside like you’re on a survival game show.`,
+    "weather-rainy": `The skies over ${currentLocation.name} are leaking with style. It's raining like the clouds have been holding it in all week. Streets are slick, umbrellas are flipping, and your socks are definitely going to suffer. It’s a good day to embrace your inner puddle-hopper or wrap yourself in a blanket and pretend the outside world doesn’t exist.`,
+    "weather-snowy": `Snow has officially taken over ${currentLocation.name}, turning every inch of the city into a winter wonderland—or a frozen obstacle course, depending on your vibe. Everything is peaceful, fluffy, and incredibly inconvenient. The roads are chaos, the cold is unforgiving, and the snowmen are silently judging. Wear your thickest socks. Maybe two pairs.`,
+    "weather-partly-lightning": `Things are getting flashy in ${currentLocation.name}. There’s a light show in the sky, and thunder’s laying down beats like nature’s subwoofer. It’s moody, electric, and full of surprises. Not quite storm territory, but enough to make your power flicker and your cat question its existence. Stay cozy, charge your devices, and enjoy the free fireworks.`
+  };
 
-  type NullableWeather = Weather | null;
-
-  interface FetchWeatherProps {
-    setWeather: React.Dispatch<React.SetStateAction<Weather | null>>;
-    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  }
-
+  /**
+   * This function will be doing the fetch of the weather using the API from Open Meteo.
+   * @param params.setWeather
+   * @param params.setLoading
+   * @description This function fetches the weather data from the Open Meteo API and updates the state with the current weather.
+   * @returns {Promise<void>}
+   * @throws {Error} If there is an issue with the network or the response is not ok.
+   */
   const fetchWeather = async ({ setWeather, setLoading }: FetchWeatherProps): Promise<void> => {
     try {
+
+      let latitude = currentLocation.lat;
+      let longitude = currentLocation.lng;
+
+      // Fetching the weather data from Open Meteo API
       const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`
       );
+
+      // First validation, is the response ok?
+      if (!response.ok) {
+        throw new Error('Issues with the network');
+      }
+
       const data = await response.json();
-      console.log(data)
       setWeather(data.current_weather as Weather);
+
     } catch (error) {
       console.error('Error fetching weather:', error);
     } finally {
@@ -57,21 +150,73 @@ const Home = () => {
     }
   };
 
+
+
+  /**
+   * This will be handing the select field change
+   * @param placeName 
+   */
+  const handleSelectChange = (placeName: string) => {
+
+    // we need to find the location by name
+    let currentLocation = mapController.getAll().find(location => location.name === placeName);
+
+    // we are only load something if exist the location
+    if (currentLocation) {
+      setCurrentLocation(currentLocation); // we update the current location
+      fetchWeather({ setWeather, setLoading }); // we update the weather
+    }
+
+  };
+
+  // Fetching the weather data when the component mounts
   useEffect(() => {
-    fetchWeather({setWeather, setLoading});
+    fetchWeather({ setWeather, setLoading });
   }, []);
 
-  
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Current Weather in Cork</Text>
-      <Text>Temperature: {weather?.temperature}°C</Text>
-      <Text>Windspeed: {weather?.windspeed} km/h</Text>
-      <Text>Time: {weather?.time}</Text>
-    </View>
+
+    <ScrollView contentContainerStyle={[styles.background]}>
+      <ImageBackground
+        source={WeatherBackgroundImages[mapController.getWeatherIcons(weather?.weathercode ?? 0) as keyof typeof WeatherBackgroundImages]}
+        style={{ flex: 1, width: '100%', height: '100%' }}
+        resizeMode="cover"
+      >
+        <ScrollView contentContainerStyle={[styles.scrollView]}>
+
+          <View style={styles.sectionHeader}>
+            <View style={styles.list}>
+              <MaterialCommunityIcons style={styles.listItem} name={mapController.getWeatherIcons(weather?.weathercode ?? 0)} size={50} color="black" />
+            </View>
+            <Text style={styles.title}>{currentLocation.name}</Text>
+            <Text style={styles.title}>{weather?.temperature}°C</Text>
+          </View>
+
+
+          <View style={styles.section}>
+            <Picker
+              selectedValue={currentLocation.name}
+              onValueChange={handleSelectChange}
+              style={styles.picker}
+            >
+              {allLocations.map((location, index) => (
+                <Picker.Item style={styles.pickeritem} key={index} label={location.name} value={location.name} />
+              ))}
+            </Picker>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.title}>Today</Text>
+            <Text style={styles.title}>
+              {weatherMessages[mapController.getWeatherIcons(weather?.weathercode ?? 0) as keyof typeof weatherMessages] || "Weather information not available"}
+            </Text>
+          </View>
+        </ScrollView>
+
+      </ImageBackground>
+
+    </ScrollView>
   );
 }
 
 export default Home
-
-const styles = StyleSheet.create({})
