@@ -146,7 +146,7 @@ export class Maps {
       console.error("[getWeatherIcons]: An error occurred.", error);
     } finally {
 
-      console.log(icon)
+      // console.log(icon)
       return icon; // Ensuring that i will have a valid data always returned
     }
   };
