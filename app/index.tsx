@@ -2,6 +2,8 @@ import { StyleSheet, Text, View } from 'react-native'
 import React, { useEffect, useState } from 'react';
 import { Maps } from '../components/Maps/Maps';
 import { Picker } from '@react-native-picker/picker';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Weather, NullableWeather, FetchWeatherProps } from '../components/IWeather';
 
 const Home = () => {
 
@@ -28,8 +30,8 @@ const Home = () => {
       justifyContent: 'center',
       alignItems: 'center',
       width: '100%',
-      marginBottom: 20,
-      padding: 10,
+      marginBottom: 10,
+      padding: 20,
       borderWidth: 1,
       borderColor: '#ccc',
       borderRadius: 5,
@@ -82,20 +84,6 @@ const Home = () => {
     },
   });
 
-  interface Weather {
-    temperature: number;
-    windspeed: number;
-    time: string;
-    weathercode: number;
-  }
-
-  type NullableWeather = Weather | null;
-
-  interface FetchWeatherProps {
-    setWeather: React.Dispatch<React.SetStateAction<Weather | null>>;
-    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  }
-
   const fetchWeather = async ({ setWeather, setLoading }: FetchWeatherProps): Promise<void> => {
     try {
 
@@ -114,9 +102,6 @@ const Home = () => {
       }
 
       const data = await response.json();
-      console.log(" CHECK HERE ");
-      console.log(data)
-
       setWeather(data.current_weather as Weather);
 
     } catch (error) {
@@ -126,14 +111,7 @@ const Home = () => {
     }
   };
 
-  useEffect(() => {
-    fetchWeather({ setWeather, setLoading });
-  }, []);
-
-
-  function setSelectedValue(itemValue: string): void {
-    throw new Error('Function not implemented.');
-  }
+  
 
   /**
    * 
@@ -142,25 +120,37 @@ const Home = () => {
   const handleSelectChange = (cityName: string) => {
 
     // we need to find the location by name
-    const selectedLocation = mapController.getAll().find(location => location.name === cityName);
+    let currentLocation = mapController.getAll().find(location => location.name === cityName);
 
     // we are only load something if exist the location
-    if (selectedLocation) {
-      setCurrentLocation(selectedLocation); // we update the current location
+    if (currentLocation) {
+      setCurrentLocation(currentLocation); // we update the current location
       fetchWeather({ setWeather, setLoading }); // we update the weather
     }
 
   };
 
-  const [selectedCity, setSelectedCity] = useState('Cork');
+  // Fetching the weather data when the component mounts
+  useEffect(() => {
+    fetchWeather({ setWeather, setLoading });
+  }, []);
 
   return (
     <View style={styles.container}>
+
       <View style={styles.section}>
-        <Text style={styles.title}>Current Weather in {currentLocation.name}</Text>
+        <Text style={styles.title}>{currentLocation.name}</Text>
+      </View>
+      
+      <View style={styles.section}>
+        <Text style={styles.title}>In {currentLocation.name}, it’s not just the landmarks that stay with you — it’s the quiet corners, 
+          the scent in the air, the way people move like they’ve always known the rhythm of the place. A simple walk there isn’t just 
+          a stroll; it’s a slow unraveling of stories the city keeps tucked in between cracks and corners. Look up, take your time, and 
+          let {currentLocation.name} show you how even an ordinary day can feel like a little piece of magic!</Text>
         <Text style={styles.title}>Lat: {currentLocation.lat}</Text>
         <Text style={styles.title}>Lng: {currentLocation.lng}</Text>
       </View>
+
       <View style={styles.section}>
         <Text>Temperature: {weather?.temperature}°C</Text>
         <Text>Windspeed: {weather?.windspeed} km/h</Text>
@@ -169,12 +159,19 @@ const Home = () => {
           Code: {weather?.weathercode}
         </Text>
         <Text>
-          {mapController.weatherCodeDescriptions[weather?.weathercode || 0]}
+          {mapController.getWeatherCodeDescription(weather?.weathercode ?? 0)}
         </Text>
+        <Text>
+        {mapController.getWeatherIcons(weather?.weathercode ?? 0)}
+        </Text>
+        <View style={styles.list}>
+          <MaterialCommunityIcons name={mapController.getWeatherIcons(weather?.weathercode ?? 0)} size={50} color="black" />
+        </View>
       </View>
+
       <View style={styles.section}>
         <Picker
-          selectedValue={selectedCity}
+          selectedValue={currentLocation.name}
           onValueChange={handleSelectChange}
           style={styles.picker}
         >
@@ -183,6 +180,7 @@ const Home = () => {
             ))}
         </Picker>
       </View>
+
     </View>
   );
 }

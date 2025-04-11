@@ -1,0 +1,14 @@
+[
+  { "name": "Cork", "lat": 51.8985, "lng": -8.4756 },
+  { "name": "Tokyo", "lat": 35.6895, "lng": 139.6917 },
+  { "name": "Paris", "lat": 48.8566, "lng": 2.3522 },
+  { "name": "Hong Kong", "lat": 22.3193, "lng": 114.1694 },
+  { "name": "Bangkok", "lat": 13.7563, "lng": 100.5018 },
+  { "name": "St. Petersburg", "lat": 59.9343, "lng": 30.3351 },
+  { "name": "Kiev", "lat": 50.4501, "lng": 30.5234 },
+  { "name": "Berlin", "lat": 52.52, "lng": 13.405 },
+  { "name": "Dublin", "lat": 53.3498, "lng": -6.2603 },
+  { "name": "London", "lat": 51.5072, "lng": -0.1276 },
+  { "name": "New York", "lat": 40.7128, "lng": -74.006 },
+  { "name": "Mexico City", "lat": 19.4326, "lng": -99.1332 }
+]
