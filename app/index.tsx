@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image, ScrollView } from 'react-native'
+import { StyleSheet, Text, View, Image, ScrollView, useWindowDimensions, ImageBackground } from 'react-native'
 import React, { useEffect, useState } from 'react';
 import { Maps } from '../components/Maps/Maps';
 import { Picker } from '@react-native-picker/picker';
@@ -13,6 +13,7 @@ const Home = () => {
   let allLocations = mapController.getAll();
   let [currentLocation, setCurrentLocation] = useState(mapController.getDefaultLocation());
 
+  const { width } = useWindowDimensions();
   const [weather, setWeather] = useState<NullableWeather>(null);
   const [loading, setLoading] = useState(true);
 
@@ -20,25 +21,22 @@ const Home = () => {
   const styles = StyleSheet.create({
     scrollView: {
       display: 'flex',
-      marginTop: 10,
       alignItems: 'center',
       justifyContent: 'flex-start',
       alignContent: 'center',
     },
     background: {
-      backgroundColor: 'red',
+      height: '100%',
     },
     imageTitle: {
       position: 'absolute',
-      objectFit: 'cover',
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: '#333',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       width: '100%',
       height: '100%',
-      // flex: 1,
-      margin: 0,
-      padding: 0,
+      zIndex: -1,
     },
     section: {
       display: 'flex',
@@ -49,9 +47,23 @@ const Home = () => {
       marginBottom: 10,
       padding: 10,
       borderWidth: 1,
-      borderColor: '#ccc',
+      borderColor: 'transparent',
       borderRadius: 5,
-      backgroundColor: '#f9f9f9',
+      backgroundColor: '#f9f9f9A4',
+    },
+    sectionHeader: {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: width > 600 ? '20%' : '40%',
+      marginBottom: 10,
+      marginTop: 20,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: 'transparent',
+      borderRadius: 100,
+      backgroundColor: '#f9f9f9A4',
     },
     container: {
       flex: 1,
@@ -61,20 +73,16 @@ const Home = () => {
     },
 
     title: {
-      fontSize: 20,
+      fontSize: 28,
       marginBottom: 10,
       textAlign: 'center',
     },
     list: {
-      // width: '100%',
-      // paddingHorizontal: 10,
-      backgroundColor: "pink",
+      paddingHorizontal: 10,
     },
     listItem: {
-      // flexDirection: 'row',
-      // alignItems: 'flex-start',
-      // marginBottom: 8,
-      backgroundColor: "blue",
+      alignItems: 'flex-start',
+      margin: 2,
     },
 
     pickerWrapper: {
@@ -95,6 +103,18 @@ const Home = () => {
       width: '100%',
     }
   });
+
+  // Messages for the weather
+  const weatherMessages = {
+    "weather-sunny": `It’s full sun mode in ${currentLocation.name}! The sky is showing off, the sun is blazing like it’s on a mission, and every surface is a frying pan. SPF 50+ is your best friend today, unless you’re trying to roast. It’s the perfect time to fake productivity with a cold drink in hand, while secretly melting into the pavement. Welcome to human-toast mode.`,
+    "weather-cloudy": `${currentLocation.name} is draped in a thick, stylish coat of clouds. Not bright, not rainy, just perfectly “meh.” The sun called in sick, the clouds showed up to work, and the mood outside screams introspection. It's the kind of day where you stare out the window and ponder life choices while sipping something warm and pretending you’re in a sad indie film.`,
+    "weather-fog": `Fog has swallowed ${currentLocation.name} like a fantasy realm about to reveal a dragon. You can’t see three steps ahead, the air feels like mystery soup, and everything looks ten times spookier than usual. It’s giving thriller movie opening scene vibes. Probably not the best day for a long drive or a confident jog, unless you're training to be a ghostbuster.`,
+    "weather-partly-rainy": `${currentLocation.name} is in that awkward mood between bright and soggy. The sky is indecisive—sun’s peeking through like it didn’t mean to intrude, while the drizzle is vibing in the background. It’s the kind of day where your weather app says “maybe” and your outfit screams “regret.” Take the umbrella, don’t trust the clouds—they're flaky.`,
+    "weather-snowy-rainy": `It’s absolute chaos above ${currentLocation.name}. Rain and snow are in a wild tag-team match, and you’re the unlucky referee. It’s wet, cold, confusing, and somehow beautiful in a messy kind of way. This is the type of weather that laughs at your shoes, ignores your coat, and dares you to step outside like you’re on a survival game show.`,
+    "weather-rainy": `The skies over ${currentLocation.name} are leaking with style. It's raining like the clouds have been holding it in all week. Streets are slick, umbrellas are flipping, and your socks are definitely going to suffer. It’s a good day to embrace your inner puddle-hopper or wrap yourself in a blanket and pretend the outside world doesn’t exist.`,
+    "weather-snowy": `Snow has officially taken over ${currentLocation.name}, turning every inch of the city into a winter wonderland—or a frozen obstacle course, depending on your vibe. Everything is peaceful, fluffy, and incredibly inconvenient. The roads are chaos, the cold is unforgiving, and the snowmen are silently judging. Wear your thickest socks. Maybe two pairs.`,
+    "weather-partly-lightning": `Things are getting flashy in ${currentLocation.name}. There’s a light show in the sky, and thunder’s laying down beats like nature’s subwoofer. It’s moody, electric, and full of surprises. Not quite storm territory, but enough to make your power flicker and your cat question its existence. Stay cozy, charge your devices, and enjoy the free fireworks.`
+  };
 
   /**
    * This function will be doing the fetch of the weather using the API from Open Meteo.
@@ -133,7 +153,7 @@ const Home = () => {
 
 
   /**
-   * 
+   * This will be handing the select field change
    * @param placeName 
    */
   const handleSelectChange = (placeName: string) => {
@@ -151,64 +171,49 @@ const Home = () => {
 
   // Fetching the weather data when the component mounts
   useEffect(() => {
-    console.log("Staring page");
     fetchWeather({ setWeather, setLoading });
-    
   }, []);
-
 
   return (
 
-    <ScrollView contentContainerStyle={[styles.scrollView, styles.background]}>
-
-
-      <Image
+    <ScrollView contentContainerStyle={[styles.background]}>
+      <ImageBackground
         source={WeatherBackgroundImages[mapController.getWeatherIcons(weather?.weathercode ?? 0) as keyof typeof WeatherBackgroundImages]}
-        style={styles.imageTitle}
+        style={{ flex: 1, width: '100%', height: '100%' }}
         resizeMode="cover"
-      />
+      >
+        <ScrollView contentContainerStyle={[styles.scrollView]}>
 
-      <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.list}>
+              <MaterialCommunityIcons style={styles.listItem} name={mapController.getWeatherIcons(weather?.weathercode ?? 0)} size={50} color="black" />
+            </View>
+            <Text style={styles.title}>{currentLocation.name}</Text>
+            <Text style={styles.title}>{weather?.temperature}°C</Text>
+          </View>
 
-        <Text>Here 2 : {mapController.getWeatherIcons(weather?.weathercode ?? 0)} </Text>
-        
-      </View>
-      <View style={styles.section}>
-        <View style={styles.list}>
-          <MaterialCommunityIcons style={styles.listItem} name={mapController.getWeatherIcons(weather?.weathercode ?? 0)} size={50} color="black" />
-        </View>
-        <Text style={styles.title}>{currentLocation.name}</Text>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.title}>In {currentLocation.name}, it’s not just the landmarks that stay with you — it’s the quiet corners,
-          the scent in the air, the way people move like they’ve always known the rhythm of the place. A simple walk there isn’t just
-          a stroll; it’s a slow unraveling of stories the city keeps tucked in between cracks and corners. Look up, take your time, and
-          let {currentLocation.name} show you how even an ordinary day can feel like a little piece of magic!</Text>
-        <Text style={styles.title}>Lat: {currentLocation.lat}</Text>
-        <Text style={styles.title}>Lng: {currentLocation.lng}</Text>
-      </View>
+          <View style={styles.section}>
+            <Picker
+              selectedValue={currentLocation.name}
+              onValueChange={handleSelectChange}
+              style={styles.picker}
+            >
+              {allLocations.map((location, index) => (
+                <Picker.Item style={styles.pickeritem} key={index} label={location.name} value={location.name} />
+              ))}
+            </Picker>
+          </View>
 
-      <View style={styles.section}>
-        <Text>Temperature: {weather?.temperature}°C</Text>
-        <Text>Windspeed: {weather?.windspeed} km/h</Text>
-        <Text>Time: {weather?.time}</Text>
-        <Text>Code: {weather?.weathercode}</Text>
-        <Text>{mapController.getWeatherCodeDescription(weather?.weathercode ?? 0)}</Text>
-        <Text>{mapController.getWeatherIcons(weather?.weathercode ?? 0)}</Text>
-      </View>
+          <View style={styles.section}>
+            <Text style={styles.title}>Today</Text>
+            <Text style={styles.title}>
+              {weatherMessages[mapController.getWeatherIcons(weather?.weathercode ?? 0) as keyof typeof weatherMessages] || "Weather information not available"}
+            </Text>
+          </View>
+        </ScrollView>
 
-      <View style={styles.section}>
-        <Picker
-          selectedValue={currentLocation.name}
-          onValueChange={handleSelectChange}
-          style={styles.picker}
-        >
-          {allLocations.map((location, index) => (
-            <Picker.Item style={styles.pickeritem} key={index} label={location.name} value={location.name} />
-          ))}
-        </Picker>
-      </View>
+      </ImageBackground>
 
     </ScrollView>
   );
