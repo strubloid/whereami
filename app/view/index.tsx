@@ -56,13 +56,13 @@ const Home = () => {
             alignItems: 'center',
         },
         button: {
-            backgroundColor: '#ccc',
+            backgroundColor: '#4b80c5',
             paddingVertical: 6,
             paddingHorizontal: 10,
             borderRadius: 10,
             alignItems: 'center',
             justifyContent: 'center',
-            marginTop: 10,
+            marginTop: 30,
             marginBottom: 10,
         },
         buttonText: {
@@ -92,7 +92,25 @@ const Home = () => {
             borderColor: 'transparent',
             borderRadius: 5,
             backgroundColor: '#f9f9f9A4',
-            margin: 10
+            margin: 20
+        },
+        sectionRounded: {
+            borderRadius: width < 600 ? 40 : 10,
+            width: width < 600 ? 'auto' : '100%',
+        },
+        sectionTitle: {
+            marginBottom: 10,
+            padding: 10,
+            backgroundColor: '#f9f9f9A4',
+            margin: 20,
+            width: 200,
+        },
+        shadows: {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 5
         },
         sectionHeader: {
             display: 'flex',
@@ -116,8 +134,10 @@ const Home = () => {
         },
 
         title: {
+
             fontSize: 28,
             marginBottom: 10,
+            padding: 4,
             textAlign: 'center',
         },
         list: {
@@ -179,8 +199,13 @@ const Home = () => {
 
             // Fetching the weather data from Open Meteo API
             const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`
-            );
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`, {
+                method: 'GET',
+                headers: {
+                    'User-Agent': 'WhereAmI',
+                    'Referer': 'whereami.strubloid.com',
+                },
+            });
 
             // First validation, is the response ok?
             if (!response.ok) {
@@ -202,21 +227,21 @@ const Home = () => {
     const handleSelectChange = (placeName: string) => {
 
         setSelected(false);
-    
+
         try {
             // We need to find the location by name
             let currentLocation = mapController.getAll().find(location => location.name === placeName);
-    
+
             // If the location does not exist, throw an error
             if (!currentLocation) {
                 throw new Error(`Location not found: ${placeName}`);
             }
-    
+
             // Update the current location and fetch weather only if the location exists
             setCurrentLocation(currentLocation);
             fetchWeather({ setWeather });
             setSelected(true);
-            
+
         } catch (error) {
             console.error("[handleSelectChange]: Error handling select change:", error);
         } finally {
@@ -276,16 +301,38 @@ const Home = () => {
      */
 
     const getCurrentPositionAsync = async (): Promise<Location.LocationObject> => {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          throw new Error('Permission to access location was denied');
+        try 
+        {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            let location: Location.LocationObject;
+
+    
+            if (status !== 'granted') {
+                // Attempt using Geolocation as a fallback method
+                location = await new Promise<Location.LocationObject>((resolve, reject) => 
+                    Geolocation.getCurrentPosition(
+                        (position) => resolve(position as Location.LocationObject),
+                        (error) => reject(error),
+                        {
+                            timeout: 1000,
+                            maximumAge: 3000
+                        }
+                    )
+                );
+            } else {
+                // Use Expo's Location API for high accuracy
+                location = await Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.High,
+                });
+            }
+    
+            return location;
+
+        } catch (error) {
+            console.error("Error getting location:", error);
+            throw new Error("Failed to get location");
         }
-      
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
-        return location;
-      };
+    };
 
     /**
      * This button will update for you try to get your own gps position
@@ -302,13 +349,12 @@ const Home = () => {
 
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/reverse.php?lat=${latitude}&lon=${longitude}&zoom=18&format=jsonv2`, {
-                  method: 'GET',
-                  headers: {
+                method: 'GET',
+                headers: {
                     'User-Agent': 'WhereAmI', // Replace with your app's name and website
                     'Referer': 'whereami.strubloid.com', // Replace with your app's URL
-                  },
-                }
-              );
+                },
+            });
 
             console.log('response')
             console.log(response)
@@ -371,18 +417,14 @@ const Home = () => {
 
                     {starting && (
                         <>
-                            <View style={styles.section}>
-                                <Text style={styles.title}>Welcome to Where Am I?</Text>
-                                <Text style={styles.title}>Your weather companion 🌤️</Text>
+                            <View style={[styles.sectionRounded, styles.sectionTitle, styles.shadows]}>
+                                <Text style={styles.title}>Your weather companion</Text>
                             </View>
-                            <View style={styles.section}>
+                            <View style={[styles.section, styles.sectionRounded, styles.shadows]}>
                                 <Text style={styles.title}>Stay updated with real-time forecasts, track upcoming weather patterns, and get alerts tailored to your location.</Text>
                             </View>
                         </>
                     )}
-
-                    <TouchableOpacity onPress={updateGPS} style={styles.button}><Text style={styles.buttonText}>GPS</Text></TouchableOpacity>
-                    <WeatherSelect styles={styles} currentLocation={currentLocation} allLocations={allLocations} handleSelectChange={handleSelectChange} />
 
                     {(selected || selectedGPS) && (
                         <>
@@ -391,6 +433,8 @@ const Home = () => {
                         </>
                     )}
 
+                    <WeatherSelect styles={styles} currentLocation={currentLocation} allLocations={allLocations} handleSelectChange={handleSelectChange} />
+                    <TouchableOpacity onPress={updateGPS} style={styles.button}><Text style={styles.buttonText}>GPS</Text></TouchableOpacity>
 
                 </ScrollView>
             </ImageBackground>

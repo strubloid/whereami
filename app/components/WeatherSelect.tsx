@@ -21,7 +21,7 @@ interface WeatherSelectProps {
  */
 const WeatherSelect: React.FC<WeatherSelectProps> = ({ styles, currentLocation, allLocations, handleSelectChange }) => {
   return (
-    <View style={styles.pickerWrapper}>
+    <View style={[styles.pickerWrapper, styles.shadows]}>
       <Picker
         selectedValue={currentLocation.name}
         onValueChange={handleSelectChange}

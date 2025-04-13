@@ -23,7 +23,7 @@ interface WeatherBubbleProps {
  */
 const WeatherBubble: React.FC<WeatherBubbleProps> = ({ styles, mapController, weather, currentLocation }) => {
   return (
-    <View style={styles.sectionHeader}>
+    <View style={[styles.sectionHeader, styles.shadows]}>
       <View style={styles.list}>
         <MaterialCommunityIcons
           style={styles.listItem}
