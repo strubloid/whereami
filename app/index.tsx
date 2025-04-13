@@ -5,6 +5,9 @@ import { Picker } from '@react-native-picker/picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Weather, NullableWeather, FetchWeatherProps } from '../components/IWeather';
 import { WeatherBackgroundImages } from '../components/WeatherBackgroundImages';
+import WeatherBubble from './(components)/WeatherBubble';
+import WeatherTextBox from './(components)/WeatherTextBox';
+import WeatherSelect from './(components)/WeatherSelect';
 
 const Home = () => {
 
@@ -27,6 +30,11 @@ const Home = () => {
     },
     background: {
       height: '100%',
+    },
+    imageBackground: {
+       flex: 1, 
+       width: '100%', 
+       height: '100%' 
     },
     imageTitle: {
       position: 'absolute',
@@ -179,42 +187,16 @@ const Home = () => {
     <ScrollView contentContainerStyle={[styles.background]}>
       <ImageBackground
         source={WeatherBackgroundImages[mapController.getWeatherIcons(weather?.weathercode ?? 0) as keyof typeof WeatherBackgroundImages]}
-        style={{ flex: 1, width: '100%', height: '100%' }}
+        style={styles.imageBackground}
         resizeMode="cover"
       >
         <ScrollView contentContainerStyle={[styles.scrollView]}>
-
-          <View style={styles.sectionHeader}>
-            <View style={styles.list}>
-              <MaterialCommunityIcons style={styles.listItem} name={mapController.getWeatherIcons(weather?.weathercode ?? 0)} size={50} color="black" />
-            </View>
-            <Text style={styles.title}>{currentLocation.name}</Text>
-            <Text style={styles.title}>{weather?.temperature}°C</Text>
-          </View>
-
-
-          <View style={styles.section}>
-            <Picker
-              selectedValue={currentLocation.name}
-              onValueChange={handleSelectChange}
-              style={styles.picker}
-            >
-              {allLocations.map((location, index) => (
-                <Picker.Item style={styles.pickeritem} key={index} label={location.name} value={location.name} />
-              ))}
-            </Picker>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.title}>Today</Text>
-            <Text style={styles.title}>
-              {weatherMessages[mapController.getWeatherIcons(weather?.weathercode ?? 0) as keyof typeof weatherMessages] || "Weather information not available"}
-            </Text>
-          </View>
+          <WeatherBubble styles={styles} mapController={mapController} weather={weather} currentLocation={currentLocation} />
+          <WeatherSelect styles={styles} currentLocation={currentLocation} allLocations={allLocations} handleSelectChange={handleSelectChange} />
+          <WeatherTextBox styles={styles} mapController={mapController} weather={weather} weatherMessages={weatherMessages} />
         </ScrollView>
-
+        
       </ImageBackground>
-
     </ScrollView>
   );
 }
