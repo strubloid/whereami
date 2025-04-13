@@ -9,6 +9,18 @@ interface WeatherBubbleProps {
   currentLocation: any;
 }
 
+/**
+ * This component displays bubble on the top that shows an icon of the weather
+ * the name of selected place, and a how is the teamperature.
+ * It shows the weather message based on the weather code provided by the map controller.
+ * 
+ * @param param - styles: styles of the page
+ * @param param - mapController: the map controller to get the weather information
+ * @param param - weather: the weather information
+ * @param currentLocation - Current location information
+ * @returns React.FC<WeatherBubbleProps> This is a TypeScript type annotation that means: 
+ * This component is a React Function Component. It expects props that match the WeatherBubbleProps interface
+ */
 const WeatherBubble: React.FC<WeatherBubbleProps> = ({ styles, mapController, weather, currentLocation }) => {
   return (
     <View style={styles.sectionHeader}>

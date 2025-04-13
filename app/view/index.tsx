@@ -1,4 +1,4 @@
-import { StyleSheet, ImageResizeMode, ScrollView, useWindowDimensions, ImageBackground } from 'react-native'
+import { StyleSheet, TouchableOpacity, ImageResizeMode, ScrollView, useWindowDimensions, ImageBackground, Text, View } from 'react-native'
 import React, { useEffect, useState } from 'react';
 import { Maps } from '../../components/Maps/Maps';
 import { Weather, NullableWeather, FetchWeatherProps } from '../../components/IWeather';
@@ -6,11 +6,13 @@ import { WeatherBackgroundImages } from '../../components/WeatherBackgroundImage
 import WeatherBubble from '../components/WeatherBubble';
 import WeatherTextBox from '../components/WeatherTextBox';
 import WeatherSelect from '../components/WeatherSelect';
+import Geolocation from 'react-native-geolocation-service';
+import * as Location from 'expo-location';
 
 /**
  * This return the homepage element, this will ecampsulate all the
  * rules for this project.
- * @returns {JSX.Element} - The Home component that renders the weather app.
+ * @returns - The Home component that renders the weather app.
  */
 const Home = () => {
 
@@ -19,9 +21,15 @@ const Home = () => {
     let allLocations = mapController.getAll();
     let [currentLocation, setCurrentLocation] = useState(mapController.getDefaultLocation());
 
+    // This will load the page width
     const { width } = useWindowDimensions();
+
     const [weather, setWeather] = useState<NullableWeather>(null);
-    const [loading, setLoading] = useState(true);
+
+    const [starting, setStarting] = useState(true);
+
+    const [selected, setSelected] = useState(false);
+    const [selectedGPS, setSelectedGPS] = useState(false);
 
     // screen variables
     const mobile = 600;
@@ -46,7 +54,21 @@ const Home = () => {
             height: '100%',
             justifyContent: 'flex-end',
             alignItems: 'center',
-
+        },
+        button: {
+            backgroundColor: '#ccc',
+            paddingVertical: 6,
+            paddingHorizontal: 10,
+            borderRadius: 10,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginTop: 10,
+            marginBottom: 10,
+        },
+        buttonText: {
+            color: '#fff',
+            fontSize: 16,
+            fontWeight: '600',
         },
         imageTitle: {
             position: 'absolute',
@@ -70,6 +92,7 @@ const Home = () => {
             borderColor: 'transparent',
             borderRadius: 5,
             backgroundColor: '#f9f9f9A4',
+            margin: 10
         },
         sectionHeader: {
             display: 'flex',
@@ -104,17 +127,22 @@ const Home = () => {
             alignItems: 'flex-start',
             margin: 2,
         },
-
         pickerWrapper: {
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 10,
+            padding: 10,
             borderWidth: 1,
-            borderColor: '#ccc',
-            borderRadius: 8,
-            overflow: 'hidden',
-            backgroundColor: '#f9f9f9',
+            borderColor: 'transparent',
+            borderRadius: 10,
+            backgroundColor: '#f9f9f9A4',
+            margin: 10
         },
         picker: {
             height: 50,
-            width: '100%',
+            width: width < 600 ? 200 : 100,
             paddingHorizontal: 10,
             color: '#333',
         },
@@ -139,12 +167,11 @@ const Home = () => {
     /**
      * This function will be doing the fetch of the weather using the API from Open Meteo.
      * @param params.setWeather
-     * @param params.setLoading
      * @description This function fetches the weather data from the Open Meteo API and updates the state with the current weather.
      * @returns {Promise<void>}
      * @throws {Error} If there is an issue with the network or the response is not ok.
      */
-    const fetchWeather = async ({ setWeather, setLoading }: FetchWeatherProps): Promise<void> => {
+    const fetchWeather = async ({ setWeather }: FetchWeatherProps): Promise<void> => {
         try {
 
             let latitude = currentLocation.lat;
@@ -165,8 +192,6 @@ const Home = () => {
 
         } catch (error) {
             console.error('Error fetching weather:', error);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -176,15 +201,31 @@ const Home = () => {
      */
     const handleSelectChange = (placeName: string) => {
 
-        // we need to find the location by name
-        let currentLocation = mapController.getAll().find(location => location.name === placeName);
-
-        // we are only load something if exist the location
-        if (currentLocation) {
-            setCurrentLocation(currentLocation); // we update the current location
-            fetchWeather({ setWeather, setLoading }); // we update the weather
+        setSelected(false);
+    
+        try {
+            // We need to find the location by name
+            let currentLocation = mapController.getAll().find(location => location.name === placeName);
+    
+            // If the location does not exist, throw an error
+            if (!currentLocation) {
+                throw new Error(`Location not found: ${placeName}`);
+            }
+    
+            // Update the current location and fetch weather only if the location exists
+            setCurrentLocation(currentLocation);
+            fetchWeather({ setWeather });
+            setSelected(true);
+            
+        } catch (error) {
+            console.error("[handleSelectChange]: Error handling select change:", error);
+        } finally {
+            setStarting(false);
+            console.log('Check here!!!')
+            console.log(starting)
+            console.log(selected)
+            console.log(selectedGPS)
         }
-
     };
 
     /**
@@ -221,10 +262,102 @@ const Home = () => {
         return resizeMode;
     }
 
+    /**
+     * This will be getting a position in Asynchronous way, so will return an object with:
+     * coords: 
+     *    accuracy: 10
+     *    altitude: null
+     *    altitudeAccuracy: null
+     *    heading: null
+     *    latitude: 38.883333
+     *    longitude: -77
+     *    speed: null
+     * @returns current position using the geolocation of a phone or gps device.
+     */
+
+    const getCurrentPositionAsync = async (): Promise<Location.LocationObject> => {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          throw new Error('Permission to access location was denied');
+        }
+      
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+        return location;
+      };
+
+    /**
+     * This button will update for you try to get your own gps position
+     * and discover things in it.
+     */
+    const updateGPS = async () => {
+        try {
+            const position = await getCurrentPositionAsync();
+            console.log('position')
+            console.log(position)
+
+            let latitude = position.coords.latitude;
+            let longitude = position.coords.longitude;
+
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse.php?lat=${latitude}&lon=${longitude}&zoom=18&format=jsonv2`, {
+                  method: 'GET',
+                  headers: {
+                    'User-Agent': 'WhereAmI', // Replace with your app's name and website
+                    'Referer': 'whereami.strubloid.com', // Replace with your app's URL
+                  },
+                }
+              );
+
+            console.log('response')
+            console.log(response)
+
+
+            // First validation, is the response ok?
+            if (!response.ok) {
+                throw new Error('[Update GPS]: Issues with the network');
+            }
+
+            const data = await response.json();
+            console.log('data')
+
+            let address = data.address;
+            console.log(address)
+
+            let location = {
+                name: address.country,
+                lat: latitude,
+                lng: longitude
+            };
+
+            // we need to find the location name
+            setCurrentLocation(location);
+            console.log(location)
+
+            // We update the gps things
+            setSelectedGPS(true);
+            // setSelected(false);
+
+        } catch (error) {
+            console.error('[update GPS]: not able to get gps:', error);
+            setSelected(false);
+            setSelectedGPS(false);
+        } finally {
+            setStarting(false);
+            console.log('Check here!!!')
+            console.log(starting)
+            console.log(selected)
+            console.log(selectedGPS)
+        }
+    }
+
+
+
     // Fetching the weather data when the component mounts, this will be only once
     // and will be used to set the weather data for the first time.
     useEffect(() => {
-        fetchWeather({ setWeather, setLoading });
+        // fetchWeather({ setWeather, setLoading });
     }, []);
 
     return (
@@ -235,9 +368,30 @@ const Home = () => {
                 resizeMode={recizeRuleImageBackground()}
             >
                 <ScrollView contentContainerStyle={[styles.scrollView]}>
-                    <WeatherBubble styles={styles} mapController={mapController} weather={weather} currentLocation={currentLocation} />
+
+                    {starting && (
+                        <>
+                            <View style={styles.section}>
+                                <Text style={styles.title}>Welcome to Where Am I?</Text>
+                                <Text style={styles.title}>Your weather companion 🌤️</Text>
+                            </View>
+                            <View style={styles.section}>
+                                <Text style={styles.title}>Stay updated with real-time forecasts, track upcoming weather patterns, and get alerts tailored to your location.</Text>
+                            </View>
+                        </>
+                    )}
+
+                    <TouchableOpacity onPress={updateGPS} style={styles.button}><Text style={styles.buttonText}>GPS</Text></TouchableOpacity>
                     <WeatherSelect styles={styles} currentLocation={currentLocation} allLocations={allLocations} handleSelectChange={handleSelectChange} />
-                    <WeatherTextBox styles={styles} mapController={mapController} weather={weather} weatherMessages={weatherMessages} />
+
+                    {(selected || selectedGPS) && (
+                        <>
+                            <WeatherBubble styles={styles} mapController={mapController} weather={weather} currentLocation={currentLocation} />
+                            <WeatherTextBox styles={styles} mapController={mapController} weather={weather} weatherMessages={weatherMessages} />
+                        </>
+                    )}
+
+
                 </ScrollView>
             </ImageBackground>
         </ScrollView>

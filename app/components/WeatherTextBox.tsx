@@ -8,6 +8,17 @@ interface WeatherTextBoxProps {
   weatherMessages: Record<string, string>;
 }
 
+/**
+ * This component displays the weather information in a text box.
+ * It shows the weather message based on the weather code provided by the map controller.
+ * 
+ * @param param - styles: styles of the page
+ * @param param - mapController: the map controller to get the weather information
+ * @param param - weather: the weather information
+ * @param param - weatherMessages: the weather messages to display
+ * @returns React.FC<WeatherTextBoxProps> This is a TypeScript type annotation that means: 
+ * This component is a React Function Component. It expects props that match the WeatherTextBoxProps interface
+ */
 const WeatherTextBox: React.FC<WeatherTextBoxProps> = ({ styles, mapController, weather, weatherMessages }) => {
   return (
     <View style={styles.section}>
