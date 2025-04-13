@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { StyleSheet, Image } from 'react-native';
 import type { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import type { ParamListBase } from '@react-navigation/native';
 
@@ -39,7 +39,7 @@ export default function TabLayout() {
     tabBarInactiveTintColor: '#fff',
     tabBarStyle: { backgroundColor: '#333', borderTopWidth: 0 },
     headerBackground: () => (
-      <Image source={require('../assets/convective_clouds.webp')} style={tabStyles.title} resizeMode="cover" />
+      <Image source={require('../../assets/convective_clouds.webp')} style={tabStyles.title} resizeMode="cover" />
     ),
     tabBarIcon: ({ color }: { color: string }) => <MaterialIcons size={28} name="house" color={color} />,
   };
