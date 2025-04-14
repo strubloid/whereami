@@ -21,9 +21,9 @@ interface WeatherTextBoxProps {
  */
 const WeatherTextBox: React.FC<WeatherTextBoxProps> = ({ styles, mapController, weather, weatherMessages }) => {
   return (
-    <View style={[styles.section, styles.shadows]}>
-      <Text style={styles.title}>Today</Text>
-      <Text style={styles.title}>
+    <View style={[styles.section, styles.shadows, styles.textBox]}>
+      <Text style={styles.line}>Today</Text>
+      <Text style={styles.line}>
         {weatherMessages[mapController.getWeatherIcons(weather?.weathercode ?? 0) as keyof typeof weatherMessages] || "Weather information not available"}
       </Text>
     </View>

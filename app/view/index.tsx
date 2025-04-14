@@ -24,10 +24,9 @@ const Home = () => {
     // This will load the page width
     const { width } = useWindowDimensions();
 
+    // state variables
     const [weather, setWeather] = useState<NullableWeather>(null);
-
     const [starting, setStarting] = useState(true);
-
     const [selected, setSelected] = useState(false);
     const [selectedGPS, setSelectedGPS] = useState(false);
 
@@ -44,7 +43,7 @@ const Home = () => {
             justifyContent: 'flex-start',
             alignContent: 'center',
         },
-        background: {
+        mainScrollContent: {
             flex: 1,
             height: '100%',
         },
@@ -52,7 +51,7 @@ const Home = () => {
             flex: 1,
             width: '100%',
             height: '100%',
-            justifyContent: 'flex-end',
+            justifyContent: 'center',
             alignItems: 'center',
         },
         button: {
@@ -62,7 +61,7 @@ const Home = () => {
             borderRadius: 10,
             alignItems: 'center',
             justifyContent: 'center',
-            marginTop: 30,
+            marginTop: 10,
             marginBottom: 10,
         },
         buttonText: {
@@ -86,16 +85,15 @@ const Home = () => {
             justifyContent: 'center',
             alignItems: 'center',
             width: '80%',
-            marginBottom: 10,
-            padding: 10,
+            padding: 6,
             borderWidth: 1,
             borderColor: 'transparent',
             borderRadius: 5,
             backgroundColor: '#f9f9f9A4',
-            margin: 20
+            margin: 12
         },
         sectionRounded: {
-            borderRadius: width < 600 ? 40 : 10,
+            borderRadius: width < 600 ? 30 : 10,
             width: width < 600 ? 'auto' : '100%',
         },
         sectionTitle: {
@@ -104,6 +102,13 @@ const Home = () => {
             backgroundColor: '#f9f9f9A4',
             margin: 20,
             width: 200,
+        },
+        sectionSelectAndButton: {
+            padding: 12,
+            backgroundColor: '#f9f9f9A4',
+            margin: 10,
+            width: 330,
+            borderRadius: 20,
         },
         shadows: {
             shadowColor: '#000',
@@ -117,14 +122,15 @@ const Home = () => {
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
-            width: width > 600 ? '20%' : '40%',
+            width: width > 600 ? 200 : 200,
             marginBottom: 10,
-            marginTop: 20,
-            padding: 10,
+            marginTop: 10,
+            padding: 2,
             borderWidth: 1,
             borderColor: 'transparent',
             borderRadius: 100,
             backgroundColor: '#f9f9f9A4',
+            fontSize: 10,
         },
         container: {
             flex: 1,
@@ -132,12 +138,9 @@ const Home = () => {
             alignItems: 'center',
             padding: 20,
         },
-
-        title: {
-
+        line: {
             fontSize: 28,
             marginBottom: 10,
-            padding: 4,
             textAlign: 'center',
         },
         list: {
@@ -162,13 +165,18 @@ const Home = () => {
         },
         picker: {
             height: 50,
-            width: width < 600 ? 200 : 100,
+            width: "100%",
             paddingHorizontal: 10,
             color: '#333',
         },
         pickeritem: {
             height: 50,
             width: '100%',
+        },
+        textBox : {
+            width: width < 600 ? "auto"  : 800,
+            borderRadius: 100,
+            padding: 10,
         }
     });
 
@@ -216,7 +224,7 @@ const Home = () => {
             setWeather(data.current_weather as Weather);
 
         } catch (error) {
-            console.error('Error fetching weather:', error);
+            console.error('[fetchWeather]: Error fetching weather:', error);
         }
     };
 
@@ -225,10 +233,15 @@ const Home = () => {
      * @param placeName 
      */
     const handleSelectChange = (placeName: string) => {
+        try 
+        {
+            // validation for the not selected option
+            if(placeName === "-- not selected --"){
+                setCurrentLocation(mapController.getDefaultLocation());
+                throw new Error(`You need to select a place`);
+            }
 
-        setSelected(false);
 
-        try {
             // We need to find the location by name
             let currentLocation = mapController.getAll().find(location => location.name === placeName);
 
@@ -241,15 +254,11 @@ const Home = () => {
             setCurrentLocation(currentLocation);
             fetchWeather({ setWeather });
             setSelected(true);
+            setStarting(false);
 
         } catch (error) {
             console.error("[handleSelectChange]: Error handling select change:", error);
-        } finally {
-            setStarting(false);
-            console.log('Check here!!!')
-            console.log(starting)
-            console.log(selected)
-            console.log(selectedGPS)
+            setStarting(true);
         }
     };
 
@@ -339,14 +348,14 @@ const Home = () => {
      * and discover things in it.
      */
     const updateGPS = async () => {
-        try {
+        try 
+        {
+            // getting the position coords
             const position = await getCurrentPositionAsync();
-            console.log('position')
-            console.log(position)
-
             let latitude = position.coords.latitude;
             let longitude = position.coords.longitude;
 
+            // fetching with the API from nominatim, we are getting here the address by the latitude and longiude
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/reverse.php?lat=${latitude}&lon=${longitude}&zoom=18&format=jsonv2`, {
                 method: 'GET',
@@ -356,21 +365,16 @@ const Home = () => {
                 },
             });
 
-            console.log('response')
-            console.log(response)
-
-
             // First validation, is the response ok?
             if (!response.ok) {
                 throw new Error('[Update GPS]: Issues with the network');
             }
 
+            // Loading the data from the API
             const data = await response.json();
-            console.log('data')
-
             let address = data.address;
-            console.log(address)
-
+            
+            // building the MapLocations object 
             let location = {
                 name: address.country,
                 lat: latitude,
@@ -379,35 +383,33 @@ const Home = () => {
 
             // we need to find the location name
             setCurrentLocation(location);
-            console.log(location)
+
+            // update the weather
+            fetchWeather({ setWeather });
 
             // We update the gps things
             setSelectedGPS(true);
-            // setSelected(false);
+
+            setStarting(false);
 
         } catch (error) {
             console.error('[update GPS]: not able to get gps:', error);
-            setSelected(false);
             setSelectedGPS(false);
-        } finally {
-            setStarting(false);
-            console.log('Check here!!!')
-            console.log(starting)
-            console.log(selected)
-            console.log(selectedGPS)
-        }
+            setSelected(false);
+            setStarting(true);
+        } 
     }
-
-
 
     // Fetching the weather data when the component mounts, this will be only once
     // and will be used to set the weather data for the first time.
     useEffect(() => {
-        // fetchWeather({ setWeather, setLoading });
+        // I was using this when I auto loaded Cork as current position
+        // fetchWeather({ setWeather });
     }, []);
 
     return (
-        <ScrollView contentContainerStyle={[styles.background]}>
+        <ScrollView contentContainerStyle={[styles.mainScrollContent]}>
+
             <ImageBackground
                 source={WeatherBackgroundImages[mapController.getWeatherIcons(weather?.weathercode ?? 0) as keyof typeof WeatherBackgroundImages]}
                 style={styles.imageBackground}
@@ -418,24 +420,31 @@ const Home = () => {
                     {starting && (
                         <>
                             <View style={[styles.sectionRounded, styles.sectionTitle, styles.shadows]}>
-                                <Text style={styles.title}>Your weather companion</Text>
+                                <Text style={styles.line}>Your weather companion</Text>
                             </View>
                             <View style={[styles.section, styles.sectionRounded, styles.shadows]}>
-                                <Text style={styles.title}>Stay updated with real-time forecasts, track upcoming weather patterns, and get alerts tailored to your location.</Text>
+                                <Text style={styles.line}>Stay updated with real-time forecasts, and get alerts to your location.</Text>
+                                <Text style={styles.line}>You can                                 
+                                    <Text style={{fontWeight: 'bold'}}> select one of our options </Text> or
+                                    <Text style={{fontWeight: 'bold'}}> click on GPS </Text> to get your current local weather.
+                                </Text>
+
                             </View>
                         </>
                     )}
 
-                    {(selected || selectedGPS) && (
+                    {!starting && (selected || selectedGPS) && (
                         <>
                             <WeatherBubble styles={styles} mapController={mapController} weather={weather} currentLocation={currentLocation} />
                             <WeatherTextBox styles={styles} mapController={mapController} weather={weather} weatherMessages={weatherMessages} />
                         </>
                     )}
 
-                    <WeatherSelect styles={styles} currentLocation={currentLocation} allLocations={allLocations} handleSelectChange={handleSelectChange} />
-                    <TouchableOpacity onPress={updateGPS} style={styles.button}><Text style={styles.buttonText}>GPS</Text></TouchableOpacity>
-
+                    <View style={[styles.sectionRounded, styles.shadows, styles.sectionSelectAndButton]}>
+                        <WeatherSelect styles={styles} currentLocation={currentLocation} allLocations={allLocations} handleSelectChange={handleSelectChange} />
+                        <TouchableOpacity onPress={updateGPS} style={styles.button}><Text style={styles.buttonText}>GPS</Text></TouchableOpacity>    
+                    </View>
+                    
                 </ScrollView>
             </ImageBackground>
         </ScrollView>

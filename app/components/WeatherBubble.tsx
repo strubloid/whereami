@@ -32,8 +32,8 @@ const WeatherBubble: React.FC<WeatherBubbleProps> = ({ styles, mapController, we
           color="black"
         />
       </View>
-      <Text style={styles.title}>{currentLocation.name}</Text>
-      <Text style={styles.title}>{weather?.temperature}°C</Text>
+      <Text style={styles.line}>{currentLocation.name}</Text>
+      <Text style={styles.line}>{weather?.temperature}°C</Text>
     </View>
   );
 };
