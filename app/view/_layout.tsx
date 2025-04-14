@@ -85,6 +85,7 @@ export default function TabLayout() {
           headerBackground: () => (
             <Image source={require('../../assets/convective_clouds.webp')} style={tabStyles.line} resizeMode="cover" />
           ),
+          tabBarIcon: ({ color }: { color: string }) => <MaterialIcons size={28} name="apple" color={color} />,
         }}
       />
 
