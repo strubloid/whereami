@@ -28,7 +28,14 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
-    ]
+      [
+        "expo-router",
+        {
+          "root": "./app/view"
+        }
+      ]
+    ],
+    "main": "app/view/index.tsx",
+    "entryPoint": "./app/view/index.tsx"
   }
 }

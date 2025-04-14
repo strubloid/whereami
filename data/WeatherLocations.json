@@ -1,4 +1,5 @@
 [
+  { "name": "-- not selected --", "lat": 0, "lng": 0 },
   { "name": "Cork", "lat": 51.8985, "lng": -8.4756 },
   { "name": "Tokyo", "lat": 35.6895, "lng": 139.6917 },
   { "name": "Paris", "lat": 48.8566, "lng": 2.3522 },

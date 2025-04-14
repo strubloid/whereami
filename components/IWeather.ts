@@ -6,8 +6,6 @@ export interface Weather {
   }
   
   export type NullableWeather = Weather | null;
-
   export interface FetchWeatherProps {
     setWeather: React.Dispatch<React.SetStateAction<Weather | null>>;
-    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   }
