@@ -1,11 +1,9 @@
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { StyleSheet, Image } from 'react-native';
-import type { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import type { ParamListBase } from '@react-navigation/native';
-import NotFound from './+not-found';
 
 export default function TabLayout() {
 
