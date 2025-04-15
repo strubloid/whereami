@@ -308,13 +308,11 @@ const Home = () => {
      *    speed: null
      * @returns current position using the geolocation of a phone or gps device.
      */
-
     const getCurrentPositionAsync = async (): Promise<Location.LocationObject> => {
         try 
         {
             const { status } = await Location.requestForegroundPermissionsAsync();
             let location: Location.LocationObject;
-
     
             if (status !== 'granted') {
                 // Attempt using Geolocation as a fallback method
@@ -390,6 +388,7 @@ const Home = () => {
             // We update the gps things
             setSelectedGPS(true);
 
+            // we finish the starting scene
             setStarting(false);
 
         } catch (error) {
