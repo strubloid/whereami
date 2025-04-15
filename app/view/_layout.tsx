@@ -59,7 +59,7 @@ export default function TabLayout() {
         }}
         listeners={{
           tabPress: (e) => {
-            e.preventDefault(); // Optional: Prevent navigation
+            e.preventDefault();
             reloadPage();
           },
         }}
