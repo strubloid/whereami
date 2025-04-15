@@ -315,7 +315,8 @@ const Home = () => {
             let location: Location.LocationObject;
     
             if (status !== 'granted') {
-                // Attempt using Geolocation as a fallback method
+                
+                // This is an Attempt using Geolocation as a fallback method
                 location = await new Promise<Location.LocationObject>((resolve, reject) => 
                     Geolocation.getCurrentPosition(
                         (position) => resolve(position as Location.LocationObject),
@@ -326,8 +327,10 @@ const Home = () => {
                         }
                     )
                 );
+                
             } else {
-                // Use Expo's Location API for high accuracy
+                // if we can't find with what we tried before, we change to a better approach with
+                // high accuracy.
                 location = await Location.getCurrentPositionAsync({
                     accuracy: Location.Accuracy.High,
                 });
