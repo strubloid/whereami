@@ -94,7 +94,7 @@ const Home = () => {
         },
         sectionRounded: {
             borderRadius: width < 600 ? 30 : 10,
-            width: width < 600 ? 'auto' : '100%',
+            width: 'auto',
         },
         sectionTitle: {
             marginBottom: 10,
